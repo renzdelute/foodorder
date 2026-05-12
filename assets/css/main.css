@@ -24,6 +24,10 @@
     transition: 0.3s;
 }
 
+.nav-links p {
+    font-weight: bold;
+}
+
 .navbar h2{
     color: #fdfdfd;
 }
@@ -381,6 +385,10 @@ td {
     overflow: hidden;
 }
 
+.dashboard-section + .dashboard-section {
+    margin-top: 20px;
+}
+
 .section-header {
     padding: 20px 24px;
     border-bottom: 1px solid #e2e8f0;
@@ -511,16 +519,74 @@ td {
 }
 
 .action-btn {
-    padding: 6px 12px;
-    font-size: 12px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-decoration: none;
-    display: inline-block;
-    gap: 20px;
-}
+     padding: 6px 12px;
+     font-size: 12px;
+     border: none;
+     border-radius: 6px;
+     cursor: pointer;
+     transition: all 0.2s;
+     text-decoration: none;
+     display: inline-block;
+     gap: 20px;
+ }
+
+ /* Pagination Styles */
+ .pagination {
+     display: flex;
+     justify-content: center;
+     align-items: center;
+     gap: 10px;
+     padding: 20px 24px;
+     flex-wrap: wrap;
+ }
+
+ .page-links {
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     gap: 10px;
+     flex-wrap: wrap;
+ }
+
+ .page-info {
+     font-weight: 600;
+     color: #1e293b;
+     min-width: 80px;
+     text-align: center;
+ }
+
+ .page-link {
+     padding: 8px 16px;
+     border: 1px solid #e2e8f0;
+     border-radius: 6px;
+     background: white;
+     color: #64748b;
+     text-decoration: none;
+     font-size: 14px;
+     transition: all 0.2s ease;
+     min-width: 40px;
+     height: 36px;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+ }
+
+ .page-link:hover:not(.disabled) {
+     background: #f8fafc;
+     border-color: #d1d5db;
+     color: #1e293b;
+ }
+
+ .page-link.active {
+     background: #3B82F6;
+     border-color: #3B82F6;
+     color: white;
+ }
+
+ .page-link.disabled {
+     opacity: 0.5;
+     cursor: not-allowed;
+ }
 
 .btn-delete {
     background: #fee2e2;
@@ -995,6 +1061,19 @@ td {
     transform: translateY(-5px);
     box-shadow: 0px 5px 12px black;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

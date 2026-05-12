@@ -10,12 +10,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id = postInt('id');
 
     if ($id > 0) {
-        $orderCheck = $conn->prepare("SELECT order_code FROM orders WHERE id = ?");
+        $orderCheck = $conn->prepare("SELECT order_code, user_id FROM orders WHERE id = ?");
         $orderCheck->bind_param("i", $id);
         $orderCheck->execute();
         $orderResult = $orderCheck->get_result()->fetch_assoc();
         $orderCheck->close();
         $orderCode = $orderResult['order_code'] ?? '';
+        $userId = (int)($orderResult['user_id'] ?? 0);
 
         $stmt = $conn->prepare('DELETE FROM order_status_logs WHERE order_id = ?');
         $stmt->bind_param('i', $id);
@@ -33,7 +34,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->close();
 
         if ($orderCode) {
-            MqttPublisher::publishOrder($orderCode, 'deleted', 'admin');
+            // Use new MqttService for publishing
+            $mqtt = new MqttService();
+            if ($mqtt->connect()) {
+                $mqtt->publishOrderEvent($orderCode, 'deleted', 'admin', $userId, $id);
+                $mqtt->disconnect();
+            }
         }
     }
 

@@ -3,6 +3,7 @@ session_start();
 
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/helpers.php';
+require_once __DIR__ . '/../config/MqttClient.php';
 
 header('Content-Type: application/json');
 
@@ -13,7 +14,7 @@ if (!hasRole('admin')) {
 
 if($_SERVER['REQUEST_METHOD'] !== 'POST'){
     echo json_encode([
-        'success' => false, 'error' => 'Invalid Request' 
+        'success' => false, 'error' => 'Invalid Request'
     ]);
     exit;
 }
@@ -52,6 +53,18 @@ $delete_sql->bind_param('i', $item_id);
 
 if($delete_sql->execute()){
     $delete_sql->close();
+
+    // Publish MQTT menu update event
+    $mqtt = new MqttService();
+    if ($mqtt->connect()) {
+        $mqtt->publishAdminEvent('menu_item_deleted', [
+            'item_id' => $item_id,
+            'item_name' => $item['item_name'],
+            'deleted_by' => 'admin'
+        ]);
+        $mqtt->disconnect();
+    }
+
     echo json_encode([
         'success' => true,
         'message' => 'Item deleted successfully',

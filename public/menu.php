@@ -3,10 +3,18 @@ session_start();
 
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/helpers.php';
+require_once __DIR__ . '/../config/MqttClient.php';
 
-requiredRole('customer', 'login.php');
+// Check if ordering as guest (from table QR code)
+$isGuestOrder = isset($_SESSION['ordering_as_guest']) && $_SESSION['ordering_as_guest'] === true;
+$tableId = $isGuestOrder ? (int)($_SESSION['table_id'] ?? 0) : 0;
 
-$user_id = (int) $_SESSION['user_id'];
+// For guest orders, we don't require customer login
+if (!$isGuestOrder) {
+    requiredRole('customer', 'login.php');
+}
+
+$user_id = $isGuestOrder ? 0 : (int) $_SESSION['user_id']; // 0 for guest orders
 
 $foodItems = [];
 $foodItemsResult = mysqli_query($conn, "SELECT * FROM food_items WHERE is_available = 1 ORDER BY category, item_name");
@@ -50,53 +58,113 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $order_code = 'ORD-' . strtoupper(bin2hex(random_bytes(4)));
 
-    $insert_order_sql = "INSERT INTO orders (user_id, order_code, total_amount, status) VALUES (?, ?, ?, 'pending')";
-    $insert_order_stmt = $conn->prepare($insert_order_sql);
+            $insert_order_sql = "INSERT INTO orders (user_id, table_id, order_code, total_amount, status) VALUES (?, ?, ?, ?, 'pending')";
+            $insert_order_stmt = $conn->prepare($insert_order_sql);
 
-    if (!$insert_order_stmt) {
-        setFlash('Failed to prepare order insert: ' . $conn->error, 'error');
-        header('Location: menu.php');
-        exit;
-    }
+            if (!$insert_order_stmt) {
+                setFlash('Failed to prepare order insert: ' . $conn->error, 'error');
+                header('Location: menu.php');
+                exit;
+            }
 
-    $insert_order_stmt->bind_param('isd', $user_id, $order_code, $total_amount);
+            $insert_order_stmt->bind_param('iisd', $user_id, $tableId, $order_code, $total_amount);
 
-    if ($insert_order_stmt->execute()) {
-        $order_id = $conn->insert_id;
-        $insert_order_stmt->close();
+        if ($insert_order_stmt->execute()) {
+            $order_id = $conn->insert_id;
+            $insert_order_stmt->close();
 
-        $insert_item_sql = "INSERT INTO order_items (order_id, item_name, quantity, price) VALUES (?, ?, ?, ?)";
-        $insert_item_stmt = $conn->prepare($insert_item_sql);
+            $insert_item_sql = "INSERT INTO order_items (order_id, item_name, quantity, price) VALUES (?, ?, ?, ?)";
+            $insert_item_stmt = $conn->prepare($insert_item_sql);
 
-        if (!$insert_item_stmt) {
-            setFlash('Failed to prepare order items insert: ' . $conn->error, 'error');
-            header('Location: menu.php');
+            if (!$insert_item_stmt) {
+                setFlash('Failed to prepare order items insert: ' . $conn->error, 'error');
+                header('Location: menu.php');
+                exit;
+            }
+
+            foreach ($items_data as $cartItem) {
+                $insert_item_stmt->bind_param(
+                    'isid',
+                    $order_id,
+                    $cartItem['name'],
+                    $cartItem['quantity'],
+                    $cartItem['price']
+                );
+                $insert_item_stmt->execute();
+            }
+
+            $insert_item_stmt->close();
+
+            // Generate QR codes for guest orders (table orders)
+            if ($isGuestOrder && $tableId > 0) {
+                require_once __DIR__ . '/../includes/QrCode.php';
+                $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://{$_SERVER['HTTP_HOST']}";
+                
+                // Generate table QR code (for future reference)
+                $tableQrCode = QrCodeGenerator::generateTableQrCode($tableId, $baseUrl);
+                
+                // Generate kitchen QR code for this order
+                $kitchenQrCode = QrCodeGenerator::generateKitchenQrCode($order_id, $baseUrl);
+                
+                // You could store these QR codes in session or return them in the flash message
+                // For now, we'll just note that they were generated
+                setFlash('Order placed successfully! QR codes generated for kitchen display.', 'success');
+            } else {
+                setFlash('Order placed successfully!', 'success');
+            }
+
+            // Publish MQTT events so MQTT Explorer and live dashboards update immediately.
+            $customerName = $isGuestOrder ? 'Table Guest' : ($_SESSION['name'] ?? 'Customer');
+            $itemsList = array_map(function ($item) {
+                return [
+                    'name' => $item['name'],
+                    'quantity' => $item['quantity'],
+                    'price' => $item['price'],
+                ];
+            }, $items_data);
+
+            $mqtt = new MqttService();
+            if ($mqtt->connect()) {
+                $mqtt->publishNewOrder($order_code, $customerName, $itemsList, $total_amount, $user_id);
+                $mqtt->publishOrderEvent($order_code, 'pending', $customerName, $user_id, $order_id);
+
+                $counts = getOrderCounts($conn);
+                $mqtt->publishKitchenStatus(
+                    'pending',
+                    $counts['pending'],
+                    $counts['preparing'],
+                    $counts['ready'],
+                    $counts['completed']
+                );
+
+                $mqtt->disconnect();
+            }
+            
+            header('Location: customer/index.php');
             exit;
         }
-
-        foreach ($items_data as $cartItem) {
-            $insert_item_stmt->bind_param(
-                'isid',
-                $order_id,
-                $cartItem['name'],
-                $cartItem['quantity'],
-                $cartItem['price']
-            );
-            $insert_item_stmt->execute();
-        }
-
-        $insert_item_stmt->close();
-
-        setFlash('Order placed successfully!', 'success');
-        header('Location: customer/index.php');
-        exit;
-    }
 
 
     setFlash('Failed to place order: ' . $insert_order_stmt->error, 'error');
     $insert_order_stmt->close();
     header('Location: menu.php');
     exit;
+}
+
+function getOrderCounts($conn): array
+{
+    $counts = ['pending' => 0, 'preparing' => 0, 'ready' => 0, 'completed' => 0];
+    $result = mysqli_query($conn, "SELECT status, COUNT(*) as cnt FROM orders GROUP BY status");
+
+    if ($result) {
+        while ($row = mysqli_fetch_assoc($result)) {
+            if (isset($counts[$row['status']])) {
+                $counts[$row['status']] = (int) $row['cnt'];
+            }
+        }
+    }
+
+    return $counts;
 }
 ?>
 <!DOCTYPE html>

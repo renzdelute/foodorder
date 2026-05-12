@@ -1,0 +1,1 @@
+& "C:\Program Files\mosquitto\mosquitto.exe" -c "C:\xampp\htdocs\food-order-system\mosquitto-config\mosquitto.conf" -v

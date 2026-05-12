@@ -19,13 +19,13 @@ if (!in_array($status_filter, $valid_statuses)) {
 $stmt = null;
 
 if ($public) {
-    $sql = "SELECT 
-                orders.*,
-                users.name AS customer_name,
-                GROUP_CONCAT(CONCAT(order_items.item_name, ' (x', order_items.quantity, ')') SEPARATOR '||') AS items
-            FROM orders
-            JOIN users ON orders.user_id = users.id
-            LEFT JOIN order_items ON orders.id = order_items.order_id";
+     $sql = "SELECT 
+                 orders.*,
+                 COALESCE(users.name, 'Guest Order') AS customer_name,
+                 GROUP_CONCAT(CONCAT(order_items.item_name, ' (x', order_items.quantity, ')') SEPARATOR ', ') AS items
+             FROM orders
+             LEFT JOIN users ON orders.user_id = users.id
+             LEFT JOIN order_items ON orders.id = order_items.order_id";
     
     if ($status_filter !== 'all') {
         $sql .= " WHERE orders.status = ?";
@@ -49,12 +49,12 @@ if ($public) {
         exit;
     }
 
-    $sql = "SELECT 
-                orders.*,
-                GROUP_CONCAT(CONCAT(order_items.item_name, ' (x', order_items.quantity, ')') SEPARATOR '||') AS items
-            FROM orders
-            LEFT JOIN order_items ON orders.id = order_items.order_id
-            WHERE orders.user_id = ?";
+     $sql = "SELECT 
+                 orders.*,
+                 GROUP_CONCAT(CONCAT(order_items.item_name, ' (x', order_items.quantity, ')') SEPARATOR ', ') AS items
+             FROM orders
+             LEFT JOIN order_items ON orders.id = order_items.order_id
+             WHERE orders.user_id = ?";
     
     if ($status_filter !== 'all') {
         $sql .= " AND orders.status = ?";
@@ -74,13 +74,13 @@ if ($public) {
         exit;
     }
 
-    $sql = "SELECT 
-                orders.*,
-                users.name AS customer_name,
-                GROUP_CONCAT(CONCAT(order_items.item_name, ' (x', order_items.quantity, ')') SEPARATOR '||') AS items
-            FROM orders
-            JOIN users ON orders.user_id = users.id
-            LEFT JOIN order_items ON orders.id = order_items.order_id";
+     $sql = "SELECT 
+                 orders.*,
+                 COALESCE(users.name, 'Guest Order') AS customer_name,
+                 GROUP_CONCAT(CONCAT(order_items.item_name, ' (x', order_items.quantity, ')') SEPARATOR ', ') AS items
+             FROM orders
+             LEFT JOIN users ON orders.user_id = users.id
+             LEFT JOIN order_items ON orders.id = order_items.order_id";
     
     if ($status_filter !== 'all') {
         $sql .= " WHERE orders.status = ?";

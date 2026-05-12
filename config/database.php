@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/bootstrap.php';
+
 $servername = 'localhost';
 $username = 'root';
 $password = '';

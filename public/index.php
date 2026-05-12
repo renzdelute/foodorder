@@ -363,14 +363,19 @@ if ($search) {
             }
 
             let lastOrderCount = <?= count($orders) ?>;
+            let lastOrderData = '<?= json_encode($orders) ?>';
             AJAX.setPublicMode(true);
             
             AJAX.startAutoRefresh(async function(result) {
                 if (result.success && result.orders) {
                     const currentCount = document.querySelectorAll('#ordersTableBody tr').length;
-                    if (result.orders.length !== currentCount && !document.querySelector('input[name="search"]').value) {
+                    const currentData = JSON.stringify(result.orders);
+                    // Update if order count changed OR order data changed (status updates)
+                    if ((result.orders.length !== currentCount || currentData !== lastOrderData) && 
+                        !document.querySelector('input[name="search"]').value) {
                         renderOrders(result.orders);
                         document.querySelector('.order-count').textContent = result.orders.length + ' orders';
+                        lastOrderData = currentData; // Update our stored data
                     }
                 }
             }, 3000);
