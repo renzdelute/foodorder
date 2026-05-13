@@ -26,7 +26,7 @@ $item_id = post('item_id');
 $item_name = post('item_name');
 $category_name = post('category_name');
 $price = post('price');
-$is_available = postInt('is_available', 1); // Default to available if not set
+$is_available = postInt('is_available', 1);
 
 $error = [];
 
@@ -54,7 +54,7 @@ if (!empty($error)) {
     exit;
 }
 
-// Check if item exists
+// check if item exists
 $check_sql = "SELECT id FROM food_items WHERE id = ? LIMIT 1";
 $check_stmt = $conn->prepare($check_sql);
 if (!$check_stmt) {
@@ -64,6 +64,7 @@ if (!$check_stmt) {
     ]);
     exit;
 }
+
 $check_stmt->bind_param('i', $item_id);
 if (!$check_stmt->execute()) {
     $checkError = $check_stmt->error;
@@ -117,6 +118,7 @@ if($duplicate_result->num_rows > 0){
     ]);
     exit;
 }
+
 $duplicate_stmt->close();
 
 $update_sql = "UPDATE food_items SET item_name = ?, category = ?, price = ?, is_available = ? WHERE id = ?";
