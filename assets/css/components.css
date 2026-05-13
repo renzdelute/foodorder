@@ -196,8 +196,8 @@
 .menu-button {
     margin-bottom: 10px;
     background: blue;
-    padding: 10px 20px;
-    width: 120px;
+    padding: 12px 20px;
+    width: 200px;
     border-radius: 8px;
     transition: transform 0.2s ease;
     cursor: pointer;
@@ -231,6 +231,10 @@
     background: #f9f9f9;
 }
 
+.welcome-text {
+    font-weight: bold;
+}
+
 #image-preview {
     display: none;
     width: 100%;
@@ -238,7 +242,6 @@
     object-fit: cover;
     pointer-events: none;
 }
-
 
 .upload-text {
     position: absolute;
@@ -258,6 +261,8 @@
     justify-content: center;
     align-items: center;
 }
+
+
 
 
 

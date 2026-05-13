@@ -63,7 +63,6 @@ function requireAdmin(){
 
     syncActiveAuthRole('admin');
 }
-
 function hasRole($role){
     if(is_array($role)){
         foreach ($role as $singleRole) {
@@ -151,7 +150,6 @@ function countTable($conn, $table){
     $row = mysqli_fetch_assoc($result);
     return (int)($row['count'] ?? 0);
 }
-
 function getAll($conn, $sql){
     $result = mysqli_query($conn, $sql);
 

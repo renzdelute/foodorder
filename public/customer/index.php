@@ -109,7 +109,7 @@ foreach ($orders as $o) {
     <div class="kitchen-container" style="margin-top: 30px;">
         <div class="kitchen-header">
             <h1>My Orders <i class="fas fa-clipboard-list"></i></h1>
-            <div>
+            <div class="right-side">
                 <span class="welcome-text">Hi, <?= htmlspecialchars($user_name); ?></span>
                 <a href="actions/logout.php" class="logout-link">Logout</a>
             </div>

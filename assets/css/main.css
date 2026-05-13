@@ -656,9 +656,24 @@ td {
     border-radius: 5px;
     margin-bottom: 15px;
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
     border: 1px solid #ddd;
+}
+
+.right-side {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: center;
+}
+
+.session-name p {
+    color: rgb(0, 0, 0);
+    position: relative;
+    font-weight: bold;
+    margin-left: 0;
 }
 
 .kitchen-header h1 {
@@ -671,10 +686,13 @@ td {
     color: #c00;
     text-decoration: none;
     font-size: 14px;
+    transition: transform 0.3s ease;
+    font-weight: bold;
+    display: flex;
 }
 
-.logout-link:hover {
-    text-decoration: underline;
+.logout-link a:hover {
+    transform: translateY(-5px);
 }
 
 .kitchen-stats {
@@ -1061,6 +1079,15 @@ td {
     transform: translateY(-5px);
     box-shadow: 0px 5px 12px black;
 }
+
+
+
+
+
+
+
+
+
 
 
 

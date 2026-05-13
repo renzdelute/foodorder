@@ -40,6 +40,7 @@ $completed_count = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as co
     <title>Kitchen Panel - FoodPulse</title>
     <link rel="stylesheet" href="../../assets/css/main.css">
     <link rel="stylesheet" href="../../assets/css/base.css">
+    <link rel="stylesheet" href="../../assets/css/responsive.css">
     <link rel="stylesheet" href="../../assets/css/toast.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -109,10 +110,12 @@ $completed_count = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as co
             animation: slideIn 0.3s ease;
             max-width: 400px;
         }
+
         .notification-toast h4 {
             margin: 0 0 4px 0;
             font-size: 14px;
         }
+
         .notification-toast p {
             margin: 0;
             font-size: 13px;
@@ -137,8 +140,18 @@ $completed_count = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as co
 
     <div class="kitchen-container" style="margin-top: 30px;">
         <div class="kitchen-header">
-            <h1>Kitchen Orders <i class="fas fa-utensils"></i></h1>
-            <a href="actions/logout.php" class="logout-link">Logout</a>
+            <h1>Kitchen Orders</h1>
+            
+            <div class="right-side">
+                <div class="session-name">
+                    <p>Welcome <?php echo $_SESSION['name']?>!</p>
+                    <input type="hidden" name="role" value="kitchenstaff">
+                </div>
+
+                <div class="logout-link">
+                    <a href="actions/logout.php">Logout</a>
+                </div>
+            </div>
         </div>
 
         <?php include '../../template/alerts.php'; ?>
