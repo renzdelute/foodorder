@@ -1,10 +1,10 @@
-/* :root */
+:root
 
 
 .navbar{
     background-color: #0F172A;
     padding: 20px 50px;
-    position: fixed;
+    position: sticky;
     top: 0;
     left: 0;
     width: 100%;
@@ -682,6 +682,15 @@ td {
     color: #333;
 }
 
+.logout-link a {
+    color: #c00;
+    text-decoration: none;
+    font-size: 14px;
+    transition: transform 0.3s ease;
+    font-weight: bold;
+    display: flex;
+}
+
 .logout-link {
     color: #c00;
     text-decoration: none;
@@ -1079,6 +1088,10 @@ td {
     transform: translateY(-5px);
     box-shadow: 0px 5px 12px black;
 }
+
+
+
+
 
 
 
