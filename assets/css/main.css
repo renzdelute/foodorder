@@ -1,5 +1,7 @@
-:root
-
+:root {
+    --color: red;
+    --bold-font-weight: bold;
+}
 
 .navbar{
     background-color: #0F172A;
@@ -25,7 +27,7 @@
 }
 
 .nav-links p {
-    font-weight: bold;
+    font-weight: var(--bold-font-weight);
 }
 
 .navbar h2{
@@ -93,7 +95,6 @@
     border-radius: 12px;
     gap: 20px;
 }
-
 
 .register-content label {
     margin-bottom: 12px;
@@ -683,7 +684,7 @@ td {
 }
 
 .logout-link a {
-    color: #c00;
+    color: var(--color);
     text-decoration: none;
     font-size: 14px;
     transition: transform 0.3s ease;
@@ -692,7 +693,7 @@ td {
 }
 
 .logout-link {
-    color: #c00;
+    color: var(--color);
     text-decoration: none;
     font-size: 14px;
     transition: transform 0.3s ease;
