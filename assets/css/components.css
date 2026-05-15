@@ -1,6 +1,7 @@
 :root {
     --border-radius: 10px;
     --font-size: 12px;
+    --spacing: 16px;
 }
 
 .auth-wrapper {
