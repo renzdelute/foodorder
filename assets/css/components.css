@@ -2,6 +2,7 @@
     --border-radius: 10px;
     --font-size: 12px;
     --spacing: 16px;
+    --font-weight: bold;
 }
 
 .auth-wrapper {

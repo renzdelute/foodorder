@@ -57,7 +57,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
                 <h2>Welcome Back</h2>
                 <p>Sign in to continue</p>
             </div>
-            
+    
             <form action="login.php" method="post" class="auth-form">
                 <div class="form-group">
                     <label for="username">Username</label>
