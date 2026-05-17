@@ -76,6 +76,7 @@ $orderUser = getAll($conn, "
             padding: 20px;
             margin-top: 20px;
             border: 1px solid #334155;
+            margin-bottom: 20px;
         }
         .mqtt-monitor h3 {
             color: #fbbf24;
@@ -171,31 +172,6 @@ $orderUser = getAll($conn, "
         .log-entry .log-data {
             color: #94a3b8;
             word-break: break-word;
-        }
-
-        .topic-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        .topic-list li {
-            padding: 8px 12px;
-            background: #0f172a;
-            border-radius: 6px;
-            margin-bottom: 5px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border: 1px solid #334155;
-            font-family: 'Courier New', monospace;
-            font-size: 13px;
-        }
-        .topic-list li .topic-name {
-            color: #3b82f6;
-        }
-        .topic-list li .topic-desc {
-            color: #64748b;
-            font-size: 11px;
         }
 
         .mqtt-controls {
@@ -325,65 +301,6 @@ $orderUser = getAll($conn, "
                     <p class="log-placeholder" style="color: #64748b; text-align: center; padding: 20px;">Loading MQTT history...</p>
                 </div>
             </div>
-        </div>
-
-        <!-- MQTT Topics Reference -->
-        <div class="mqtt-monitor">
-            <h3><i class="fas fa-list-ul"></i> MQTT Topic Structure (for MQTT Explorer)</h3>
-            <p style="color: #94a3b8; margin-bottom: 15px; font-size: 13px;">
-                Use these topics in MQTT Explorer to subscribe/publish. Broker: <code>MQTT_HOST:MQTT_PORT</code> from <code>.env</code> (default <code>127.0.0.1:1883</code>)
-            </p>
-            <ul class="topic-list">
-                <li>
-                    <div>
-                        <div class="topic-name">foodorder/system/orders</div>
-                        <div class="topic-desc">All system order events (PUBLISH from PHP)</div>
-                    </div>
-                    <span style="color: #10b981; font-size: 11px;">SUBSCRIBE</span>
-                </li>
-                <li>
-                    <div>
-                        <div class="topic-name">foodorder/kitchen/orders</div>
-                        <div class="topic-desc">New orders for kitchen staff (PUBLISH from PHP)</div>
-                    </div>
-                    <span style="color: #10b981; font-size: 11px;">SUBSCRIBE</span>
-                </li>
-                <li>
-                    <div>
-                        <div class="topic-name">foodorder/kitchen/status</div>
-                        <div class="topic-desc">Kitchen status/statistics updates</div>
-                    </div>
-                    <span style="color: #10b981; font-size: 11px;">SUBSCRIBE</span>
-                </li>
-                <li>
-                    <div>
-                        <div class="topic-name">foodorder/customer/&#123;user_id&#125;/orders</div>
-                        <div class="topic-desc">Per-customer order updates</div>
-                    </div>
-                    <span style="color: #10b981; font-size: 11px;">SUBSCRIBE</span>
-                </li>
-                <li>
-                    <div>
-                        <div class="topic-name">foodorder/orders/&#123;order_code&#125;</div>
-                        <div class="topic-desc">Per-order status tracking</div>
-                    </div>
-                    <span style="color: #10b981; font-size: 11px;">SUBSCRIBE</span>
-                </li>
-                <li>
-                    <div>
-                        <div class="topic-name">foodorder/admin/dashboard</div>
-                        <div class="topic-desc">Dashboard statistics updates</div>
-                    </div>
-                    <span style="color: #10b981; font-size: 11px;">SUBSCRIBE</span>
-                </li>
-                <li>
-                    <div>
-                        <div class="topic-name">foodorder/admin/events</div>
-                        <div class="topic-desc">Admin system events</div>
-                    </div>
-                    <span style="color: #10b981; font-size: 11px;">SUBSCRIBE</span>
-                </li>
-            </ul>
         </div>
 
         <!-- Existing Orders Table -->
@@ -690,10 +607,18 @@ $orderUser = getAll($conn, "
                 return [topic || '', timestamp || '', String(messageValue)].join('|');
             }
 
+            function syncLogCounters() {
+                const logEntries = document.getElementById('logEntries');
+                const entryCount = logEntries ? logEntries.querySelectorAll('.log-entry').length : 0;
+
+                msgCount = entryCount;
+                document.getElementById('mqttMsgCount').textContent = msgCount;
+                document.getElementById('mqttTopicCount').textContent = mqttSeenTopics.size;
+            }
+
             function rebuildHistoryStateFromDom() {
                 mqttSeenTopics.clear();
                 mqttSeenEntries.clear();
-                msgCount = 0;
 
                 const entries = document.querySelectorAll('#logEntries .log-entry');
                 entries.forEach(function(entry) {
@@ -712,12 +637,9 @@ $orderUser = getAll($conn, "
                     if (historyId) {
                         mqttSeenEntries.add('id:' + historyId);
                     }
-
-                    msgCount += 1;
                 });
 
-                document.getElementById('mqttMsgCount').textContent = msgCount;
-                document.getElementById('mqttTopicCount').textContent = mqttSeenTopics.size;
+                syncLogCounters();
             }
 
             function addLogEntry(topic, data, meta = {}) {
@@ -785,9 +707,7 @@ $orderUser = getAll($conn, "
                     logEntries.removeChild(logEntries.lastChild);
                 }
 
-                msgCount += 1;
-                document.getElementById('mqttMsgCount').textContent = msgCount;
-                document.getElementById('mqttTopicCount').textContent = mqttSeenTopics.size;
+                syncLogCounters();
 
                 const lastEvent = document.getElementById('mqttLastEvent');
                 if (lastEvent) {
@@ -910,10 +830,9 @@ $orderUser = getAll($conn, "
             window.clearLog = function() {
                 document.getElementById('logEntries').innerHTML = '<p class="log-placeholder" style="color: #64748b; text-align: center; padding: 20px;">Log cleared. Live MQTT monitoring is still active.</p>';
                 msgCount = 0;
-                document.getElementById('mqttMsgCount').textContent = 0;
                 mqttSeenTopics.clear();
                 mqttSeenEntries.clear();
-                document.getElementById('mqttTopicCount').textContent = 0;
+                syncLogCounters();
 
                 const lastEvent = document.getElementById('mqttLastEvent');
                 if (lastEvent) {
