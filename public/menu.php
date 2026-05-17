@@ -180,8 +180,10 @@ function getOrderCounts($conn): array
 <body>
     <div style="padding: 30px;">
         <div class="menu-header">
-        <h2>Menu</h2>
-        <a href="customer/index.php" class="back-btn">Back</a>
+            <div class="header-title">  
+                <h2>Foodpulse Menu</h2>
+            </div>
+            <a href="customer/index.php" class="back-btn">Back</a>
         </div>
         
         <form method="POST" action="menu.php" id="menuForm">

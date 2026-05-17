@@ -269,6 +269,18 @@
     align-items: center;
 }
 
+.header-title {
+    background-color: #1e293b;
+    padding: 10px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+}
+
+.header-title h2 {
+    color: white;
+}
+
 
 
 
