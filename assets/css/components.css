@@ -15,6 +15,7 @@
     padding: 20px;
 }
 
+
 .auth-card {
     background: white;
     border-radius: 16px;
@@ -177,6 +178,8 @@
     align-items: center;
     font-weight: bold;
 }
+
+
 
 .btn-menu{
     padding: 10px 15px;

@@ -125,6 +125,22 @@
     font-size: 12px;
   }
 
+  .menu-cards-container {
+    grid-template-columns: 1fr;
+  }
+
+  .menu-cards {
+    flex: 0 0 calc(100% - 24px);
+    width: calc(100% - 24px);
+    padding: 20px;
+  }
+
+  .imgUrl {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+  } 
+
   .right-side {
     width: 100%;
     justify-content: space-between;
@@ -183,6 +199,21 @@
   .session-name{
     display: flex;
     flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 380px){
+  .menu-header {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .header-title {
+    margin-bottom: 10px;
+  }
+
+  .back-btn {
+    text-align: center;
   }
 }
 

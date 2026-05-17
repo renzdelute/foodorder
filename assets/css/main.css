@@ -998,7 +998,7 @@ td {
 }
 
 .menu-cards {
-    flex: 0 0 400px;
+    flex: 0 0 200px;
     width: 400px;
     min-height: 360px; 
     box-sizing: border-box;
@@ -1017,10 +1017,10 @@ td {
 }
 
 .menu-cards-container {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, 400px);
     flex-wrap: wrap;
-    gap: 20px;
-    align-items: stretch;
+    gap: 2em;
 }
 
 .imgUrl {

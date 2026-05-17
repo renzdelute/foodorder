@@ -176,6 +176,7 @@ function getOrderCounts($conn): array
     <link rel="stylesheet" href="../assets/css/main.css">
     <link rel="stylesheet" href="../assets/css/base.css">
     <link rel="stylesheet" href="../assets/css/components.css">
+    <link rel="stylesheet" href="../assets/css/responsive.css">
 </head>
 <body>
     <div style="padding: 30px;">
