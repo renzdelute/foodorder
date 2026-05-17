@@ -57,8 +57,26 @@ $valid_transitions = [
     'cancelled' => []
 ];
 
-if (!isset($valid_transitions[$order['status']]) || !in_array($new_status, $valid_transitions[$order['status']])) {
-    echo json_encode(['success' => false, 'error' => 'Invalid status transition']);
+if ($order['status'] === $new_status) {
+    echo json_encode([
+        'success' => true,
+        'message' => 'Order is already in that status',
+        'no_change' => true,
+        'order_id' => $order_id,
+        'new_status' => $new_status,
+        'order_code' => $order['order_code']
+    ]);
+    exit;
+}
+
+$allowedNextStatuses = $valid_transitions[$order['status']] ?? [];
+if (!in_array($new_status, $allowedNextStatuses, true)) {
+    echo json_encode([
+        'success' => false,
+        'error' => 'Invalid status transition from ' . $order['status'] . ' to ' . $new_status,
+        'current_status' => $order['status'],
+        'allowed_statuses' => $allowedNextStatuses
+    ]);
     exit;
 }
 

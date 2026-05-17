@@ -22,6 +22,20 @@ function mqttBrokerConfig(): array
     ];
 }
 
+function ensureMqttHistoryTable(): void
+{
+    global $conn;
+
+    $conn->query("CREATE TABLE IF NOT EXISTS mqtt_history (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        topic VARCHAR(255) NOT NULL,
+        message TEXT NOT NULL,
+        is_incoming TINYINT(1) DEFAULT 0,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_timestamp (timestamp)
+    )");
+}
+
 switch ($action) {
     case 'get_mqtt_status':
         requireAdmin();
@@ -36,6 +50,16 @@ switch ($action) {
     case 'get_live_events':
         requireAdmin();
         echo json_encode(getRecentMqttEvents());
+        break;
+
+    case 'get_history':
+        requireAdmin();
+        echo json_encode(getMqttHistory());
+        break;
+
+    case 'clear_history':
+        requireAdmin();
+        echo json_encode(clearMqttHistory());
         break;
 
     case 'subscribe_info':
@@ -171,6 +195,73 @@ function getRecentMqttEvents(): array
         'count' => count($events),
         'timestamp' => date('Y-m-d H:i:s')
     ];
+}
+
+function getMqttHistory(): array
+{
+    global $conn;
+
+    ensureMqttHistoryTable();
+
+    $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
+    $offset = isset($_GET['offset']) ? (int)$_GET['offset'] : 0;
+    $direction = isset($_GET['direction']) ? (int)$_GET['direction'] : null; // 0 = outgoing, 1 = incoming, null = both
+
+    $where = '';
+    if ($direction !== null) {
+        $where = "WHERE is_incoming = $direction";
+    }
+
+    $result = mysqli_query($conn, "
+        SELECT * FROM mqtt_history 
+        $where 
+        ORDER BY timestamp DESC, id DESC 
+        LIMIT $limit OFFSET $offset
+    ");
+
+    $history = [];
+    if ($result) {
+        while ($row = mysqli_fetch_assoc($result)) {
+            $history[] = $row;
+        }
+    }
+
+    // Get total count for pagination
+    $countResult = mysqli_query($conn, "SELECT COUNT(*) as total FROM mqtt_history $where");
+    $total = 0;
+    if ($countResult) {
+        $countRow = mysqli_fetch_assoc($countResult);
+        $total = (int)($countRow['total'] ?? 0);
+    }
+
+    return [
+        'success' => true,
+        'history' => $history,
+        'limit' => $limit,
+        'offset' => $offset,
+        'total' => $total,
+        'timestamp' => date('Y-m-d H:i:s')
+    ];
+}
+
+function clearMqttHistory(): array
+{
+    global $conn;
+
+    ensureMqttHistoryTable();
+
+    if ($conn->query("TRUNCATE TABLE mqtt_history")) {
+        return [
+            'success' => true,
+            'message' => 'MQTT history cleared successfully'
+        ];
+    } else {
+        return [
+            'success' => false,
+            'error' => $conn->error,
+            'message' => 'Failed to clear MQTT history'
+        ];
+    }
 }
 
 function testMqttConnection(): array

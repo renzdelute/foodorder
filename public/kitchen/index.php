@@ -439,8 +439,9 @@ $completed_count = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as co
                                 }
                             }, 500);
 
-                            // Publish MQTT status change from kitchen
-                            if (mqttClient && mqttClient.isConnected()) {
+                            // Publish MQTT status change from kitchen only when the
+                            // backend actually applied a transition.
+                            if (!result.no_change && mqttClient && mqttClient.isConnected()) {
                                 const orderCode = orderItem.dataset.mqttOrder;
                                 if (orderCode) {
                                     const message = JSON.stringify({

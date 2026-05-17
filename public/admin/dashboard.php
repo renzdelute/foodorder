@@ -134,6 +134,7 @@ $orderUser = getAll($conn, "
             padding: 4px 0;
             border-bottom: 1px solid #1e293b;
             display: flex;
+            flex-wrap: wrap;
             gap: 10px;
             align-items: flex-start;
         }
@@ -141,12 +142,35 @@ $orderUser = getAll($conn, "
             color: #64748b;
             white-space: nowrap;
         }
+        .log-direction {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 42px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            background: #fbbf24;
+            color: #0f172a;
+        }
+        .log-direction.incoming {
+            background: #10b981;
+            color: #ecfdf5;
+        }
+        .log-direction.outgoing {
+            background: #3b82f6;
+            color: #eff6ff;
+        }
         .log-entry .log-topic {
             color: #3b82f6;
             font-weight: bold;
         }
         .log-entry .log-data {
             color: #94a3b8;
+            word-break: break-word;
         }
 
         .topic-list {
@@ -286,7 +310,7 @@ $orderUser = getAll($conn, "
                     <i class="fas fa-plug"></i> Test MQTT Connection
                 </button>
                 <button class="mqtt-btn mqtt-btn-success" onclick="startLiveFeed()">
-                    <i class="fas fa-play"></i> Reload Recent Events
+                    <i class="fas fa-play"></i> Reload History
                 </button>
                 <button class="mqtt-btn mqtt-btn-danger" onclick="clearLog()">
                     <i class="fas fa-trash"></i> Clear Log
@@ -296,9 +320,9 @@ $orderUser = getAll($conn, "
             <div id="testMqttResult"></div>
 
             <div class="mqtt-log" id="mqttLog">
-                <h4><i class="fas fa-list"></i> MQTT Event Log</h4>
+                <h4><i class="fas fa-list"></i> MQTT History Log</h4>
                 <div id="logEntries">
-                    <p class="log-placeholder" style="color: #64748b; text-align: center; padding: 20px;">Waiting for live MQTT events...</p>
+                    <p class="log-placeholder" style="color: #64748b; text-align: center; padding: 20px;">Loading MQTT history...</p>
                 </div>
             </div>
         </div>
@@ -452,6 +476,8 @@ $orderUser = getAll($conn, "
             let msgCount = 0;
             const wsHost = window.location.hostname || 'localhost';
             let liveFeedAutoLoaded = false;
+            const mqttSeenTopics = new Set();
+            const mqttSeenEntries = new Set();
 
             // Admin MQTT Monitor using Paho MQTT over WebSocket
             const adminMqtt = initMqttClient({
@@ -508,46 +534,248 @@ $orderUser = getAll($conn, "
             }
 
             function handleMqttMessage(topic, data) {
-                msgCount++;
-                document.getElementById('mqttMsgCount').textContent = msgCount;
-                document.getElementById('mqttTopicCount').textContent = adminMqtt.getSubscriptions().length;
-
-                // Update last event
-                const lastEvent = document.getElementById('mqttLastEvent');
-                if (lastEvent) {
-                    lastEvent.textContent = topic.split('/').pop() + ' - ' + (data.order_code || data.event || 'event');
+                if (shouldIgnoreHistoryTopic(topic)) {
+                    return;
                 }
 
-                // Add to log
-                addLogEntry(topic, data);
+                addLogEntry(topic, data, {
+                    timestamp: extractMessageTimestamp(data),
+                    isIncoming: false
+                });
 
-                // Sync order statuses in the table
-                if (data.order_code && data.new_status) {
+                if (data && data.order_code && data.new_status) {
                     syncOrderStatus(data.order_code, data.new_status);
                 }
 
-                // Update stats if provided
-                if (data.counts) {
+                if (data && data.counts) {
                     updateStats(data.counts);
                 }
             }
 
-            function addLogEntry(topic, data) {
+            function extractMessageTimestamp(data) {
+                if (!data || typeof data !== 'object') {
+                    return null;
+                }
+
+                return data.timestamp || data.datetime || data.created_at || null;
+            }
+
+            function shouldIgnoreHistoryTopic(topic) {
+                return topic === 'foodorder/system/status';
+            }
+
+            function formatMessagePreview(data) {
+                if (data === null || data === undefined) {
+                    return '-';
+                }
+
+                let previewSource = data;
+
+                if (typeof previewSource === 'object' && previewSource !== null) {
+                    if (Object.prototype.hasOwnProperty.call(previewSource, 'message')) {
+                        previewSource = previewSource.message;
+                    } else if (Object.prototype.hasOwnProperty.call(previewSource, 'payload')) {
+                        previewSource = previewSource.payload;
+                    }
+                }
+
+                if (typeof previewSource === 'string') {
+                    const trimmed = previewSource.trim();
+                    if (trimmed === '') {
+                        return '-';
+                    }
+
+                    if ((trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+                        (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+                        try {
+                            previewSource = JSON.parse(trimmed);
+                        } catch (e) {
+                            return trimmed.length > 140 ? trimmed.slice(0, 140) + '...' : trimmed;
+                        }
+                    } else {
+                        return trimmed.length > 140 ? trimmed.slice(0, 140) + '...' : trimmed;
+                    }
+                }
+
+                if (typeof previewSource === 'object' && previewSource !== null) {
+                    const parts = [];
+
+                    if (previewSource.event) parts.push(String(previewSource.event));
+                    if (previewSource.order_code) parts.push('Order ' + previewSource.order_code);
+                    if (previewSource.status) parts.push('Status: ' + previewSource.status);
+                    if (previewSource.customer) parts.push('Customer: ' + previewSource.customer);
+                    if (previewSource.total_amount !== undefined) parts.push('Amount: ' + previewSource.total_amount);
+                    if (previewSource.counts && typeof previewSource.counts === 'object') {
+                        const counts = Object.entries(previewSource.counts)
+                            .map(function(entry) {
+                                return entry[0] + '=' + entry[1];
+                            })
+                            .join(', ');
+
+                        if (counts) {
+                            parts.push('Counts: ' + counts);
+                        }
+                    }
+                    if (previewSource.items) {
+                        parts.push(Array.isArray(previewSource.items) ? previewSource.items.join(', ') : String(previewSource.items));
+                    }
+
+                    if (parts.length > 0) {
+                        return parts.join(' | ');
+                    }
+
+                    try {
+                        const json = JSON.stringify(previewSource);
+                        return json.length > 140 ? json.slice(0, 140) + '...' : json;
+                    } catch (e) {
+                        return '[unavailable payload]';
+                    }
+                }
+
+                const text = String(previewSource);
+                return text.length > 140 ? text.slice(0, 140) + '...' : text;
+            }
+
+            function formatHistoryTime(timestamp) {
+                if (!timestamp) {
+                    return new Date().toLocaleString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: true
+                    });
+                }
+
+                const date = new Date(timestamp);
+                if (Number.isNaN(date.getTime())) {
+                    return String(timestamp);
+                }
+
+                return date.toLocaleString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: true
+                });
+            }
+
+            function buildHistorySignature(topic, data, meta) {
+                const timestamp = (meta && meta.timestamp) || extractMessageTimestamp(data) || '';
+                let messageValue = data;
+
+                if (data && typeof data === 'object') {
+                    if (Object.prototype.hasOwnProperty.call(data, 'message')) {
+                        messageValue = data.message;
+                    } else if (Object.prototype.hasOwnProperty.call(data, 'payload')) {
+                        messageValue = data.payload;
+                    }
+                }
+
+                if (messageValue && typeof messageValue === 'object') {
+                    try {
+                        messageValue = JSON.stringify(messageValue);
+                    } catch (e) {
+                        messageValue = '[unserializable]';
+                    }
+                }
+
+                if (messageValue === null || messageValue === undefined) {
+                    messageValue = '';
+                }
+
+                return [topic || '', timestamp || '', String(messageValue)].join('|');
+            }
+
+            function rebuildHistoryStateFromDom() {
+                mqttSeenTopics.clear();
+                mqttSeenEntries.clear();
+                msgCount = 0;
+
+                const entries = document.querySelectorAll('#logEntries .log-entry');
+                entries.forEach(function(entry) {
+                    const topic = entry.dataset.topic || '';
+                    const historyKey = entry.dataset.historyKey || '';
+                    const historyId = entry.dataset.historyId || '';
+
+                    if (topic) {
+                        mqttSeenTopics.add(topic);
+                    }
+
+                    if (historyKey) {
+                        mqttSeenEntries.add(historyKey);
+                    }
+
+                    if (historyId) {
+                        mqttSeenEntries.add('id:' + historyId);
+                    }
+
+                    msgCount += 1;
+                });
+
+                document.getElementById('mqttMsgCount').textContent = msgCount;
+                document.getElementById('mqttTopicCount').textContent = mqttSeenTopics.size;
+            }
+
+            function addLogEntry(topic, data, meta = {}) {
                 const logEntries = document.getElementById('logEntries');
+                if (!logEntries) {
+                    return false;
+                }
+
+                const resolvedTopic = topic || (data && data.topic) || 'unknown/topic';
+                if (shouldIgnoreHistoryTopic(resolvedTopic)) {
+                    return false;
+                }
+
+                const historyKeys = [];
+                const signatureKey = 'sig:' + buildHistorySignature(topic, data, meta);
+                historyKeys.push(signatureKey);
+
+                if (meta && meta.historyId !== undefined && meta.historyId !== null && meta.historyId !== '') {
+                    historyKeys.unshift('id:' + meta.historyId);
+                }
+
+                if (historyKeys.some(function(key) {
+                    return mqttSeenEntries.has(key);
+                })) {
+                    return false;
+                }
+
+                historyKeys.forEach(function(key) {
+                    mqttSeenEntries.add(key);
+                });
+
                 const placeholder = logEntries.querySelector('.log-placeholder');
                 if (placeholder) {
                     placeholder.remove();
                 }
+
+                mqttSeenTopics.add(resolvedTopic);
+
                 const entry = document.createElement('div');
                 entry.className = 'log-entry';
+                entry.dataset.topic = resolvedTopic;
 
-                const time = new Date().toLocaleTimeString();
-                const dataPreview = JSON.stringify(data).substring(0, 100);
+                if (meta && meta.historyId !== undefined && meta.historyId !== null && meta.historyId !== '') {
+                    entry.dataset.historyId = String(meta.historyId);
+                }
+
+                const directionIsIncoming = Number((meta && meta.isIncoming !== undefined ? meta.isIncoming : (data && data.is_incoming))) === 1;
+                const directionLabel = directionIsIncoming ? 'IN' : 'OUT';
+                const directionClass = directionIsIncoming ? 'incoming' : 'outgoing';
+                const time = formatHistoryTime((meta && meta.timestamp) || extractMessageTimestamp(data));
+                const dataPreview = formatMessagePreview(data);
+                entry.dataset.historyKey = signatureKey;
 
                 entry.innerHTML = `
                     <span class="log-time">[${time}]</span>
-                    <span class="log-topic">${topic}</span>
-                    <span class="log-data">${escapeHtml(dataPreview)}${dataPreview.length >= 100 ? '...' : ''}</span>
+                    <span class="log-direction ${directionClass}">${directionLabel}</span>
+                    <span class="log-topic">${escapeHtml(resolvedTopic)}</span>
+                    <span class="log-data">${escapeHtml(dataPreview)}</span>
                 `;
 
                 logEntries.insertBefore(entry, logEntries.firstChild);
@@ -556,6 +784,18 @@ $orderUser = getAll($conn, "
                 while (logEntries.children.length > 100) {
                     logEntries.removeChild(logEntries.lastChild);
                 }
+
+                msgCount += 1;
+                document.getElementById('mqttMsgCount').textContent = msgCount;
+                document.getElementById('mqttTopicCount').textContent = mqttSeenTopics.size;
+
+                const lastEvent = document.getElementById('mqttLastEvent');
+                if (lastEvent) {
+                    const topicSuffix = resolvedTopic.split('/').pop() || resolvedTopic;
+                    lastEvent.textContent = topicSuffix + ' - ' + dataPreview;
+                }
+
+                return true;
             }
 
             function escapeHtml(text) {
@@ -622,24 +862,68 @@ $orderUser = getAll($conn, "
             // Start Live Feed
             window.startLiveFeed = function() {
                 const logEntries = document.getElementById('logEntries');
-                if (!logEntries.querySelector('.log-entry')) {
-                    logEntries.innerHTML = '<p class="log-placeholder" style="color: #64748b; text-align: center; padding: 20px;">Loading recent MQTT events...</p>';
+                if (!logEntries) {
+                    return;
                 }
 
-                // Also fetch recent events from API
-                AJAX.api('mqtt_api.php?action=get_live_events').then(function(result) {
-                    if (result.success && result.events) {
-                        result.events.forEach(function(event) {
-                            addLogEntry(event.mqtt_topic || 'foodorder/orders/' + event.order_code, event);
+                rebuildHistoryStateFromDom();
+
+                const lastEvent = document.getElementById('mqttLastEvent');
+                if (lastEvent) {
+                    lastEvent.textContent = '-';
+                }
+
+                if (!logEntries.querySelector('.log-entry')) {
+                    logEntries.innerHTML = '<p class="log-placeholder" style="color: #64748b; text-align: center; padding: 20px;">Loading recent MQTT history...</p>';
+                }
+
+                AJAX.api('mqtt_api.php?action=get_history&limit=50').then(function(result) {
+                    if (result.success && Array.isArray(result.history)) {
+                        rebuildHistoryStateFromDom();
+
+                        const historyRows = result.history.filter(function(entry) {
+                            return !shouldIgnoreHistoryTopic(entry.topic);
                         });
+
+                        if (historyRows.length === 0) {
+                            if (!logEntries.querySelector('.log-entry')) {
+                                logEntries.innerHTML = '<p class="log-placeholder" style="color: #64748b; text-align: center; padding: 20px;">No MQTT history yet. Live events will appear here automatically.</p>';
+                            }
+                            return;
+                        }
+
+                        historyRows.slice().reverse().forEach(function(entry) {
+                            addLogEntry(entry.topic, entry, {
+                                historyId: entry.id,
+                                timestamp: entry.timestamp,
+                                isIncoming: entry.is_incoming
+                            });
+                        });
+                    } else {
+                        if (!logEntries.querySelector('.log-entry')) {
+                            logEntries.innerHTML = '<p class="log-placeholder" style="color: #ef4444; text-align: center; padding: 20px;">Unable to load MQTT history right now.</p>';
+                        }
                     }
                 });
             };
 
-            function clearLog() {
+            window.clearLog = function() {
                 document.getElementById('logEntries').innerHTML = '<p class="log-placeholder" style="color: #64748b; text-align: center; padding: 20px;">Log cleared. Live MQTT monitoring is still active.</p>';
                 msgCount = 0;
                 document.getElementById('mqttMsgCount').textContent = 0;
+                mqttSeenTopics.clear();
+                mqttSeenEntries.clear();
+                document.getElementById('mqttTopicCount').textContent = 0;
+
+                const lastEvent = document.getElementById('mqttLastEvent');
+                if (lastEvent) {
+                    lastEvent.textContent = '-';
+                }
+            };
+
+            if (!liveFeedAutoLoaded) {
+                liveFeedAutoLoaded = true;
+                window.startLiveFeed();
             }
 
             // Attach delete handlers

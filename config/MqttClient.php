@@ -30,11 +30,17 @@ class MqttService
 
     public const TOPIC_PREFIX = 'foodorder';
 
+    // Static flag to ensure table creation only once per request
+    private static bool $tableChecked = false;
+
     public function __construct(string $host = '127.0.0.1', int $port = 1883, string $clientId = 'food-order-php')
     {
         $this->host = (string) food_order_env('MQTT_HOST', $host);
         $this->port = (int) food_order_env('MQTT_PORT', $port);
         $this->clientId = $clientId . '-' . uniqid();
+
+        // Ensure the mqtt_history table exists
+        $this->ensureHistoryTableExists();
     }
 
     public function connect(): bool
@@ -108,17 +114,20 @@ class MqttService
             'datetime'     => date('c')
         ]);
 
-        try {
-            $this->client->publish(self::TOPIC_PREFIX . '/system/orders', $message, 1);
+        $topic = self::TOPIC_PREFIX . '/system/orders';
+        $success = $this->publishWithLogging($topic, $message);
+
+        if ($success) {
             $this->client->publish(self::TOPIC_PREFIX . '/orders/' . $orderCode, $message, 1);
+            $this->publishWithLogging(self::TOPIC_PREFIX . '/orders/' . $orderCode, $message);
+
             if ($userId > 0) {
                 $this->client->publish(self::TOPIC_PREFIX . '/customer/' . $userId . '/orders', $message, 1);
+                $this->publishWithLogging(self::TOPIC_PREFIX . '/customer/' . $userId . '/orders', $message);
             }
-            return true;
-        } catch (\Exception $e) {
-            error_log('MQTT Publish Order Error: ' . $e->getMessage());
-            return false;
         }
+
+        return $success;
     }
 
     public function publishKitchenStatus(string $status, int $pendingCount, int $preparingCount, int $readyCount, int $completedCount): bool
@@ -136,14 +145,15 @@ class MqttService
             'timestamp'        => date('Y-m-d H:i:s')
         ]);
 
-        try {
-            $this->client->publish(self::TOPIC_PREFIX . '/kitchen/status', $message, 1);
+        $topic = self::TOPIC_PREFIX . '/kitchen/status';
+        $success = $this->publishWithLogging($topic, $message);
+
+        if ($success) {
             $this->client->publish(self::TOPIC_PREFIX . '/admin/dashboard', $message, 1);
-            return true;
-        } catch (\Exception $e) {
-            error_log('MQTT Publish Kitchen Status Error: ' . $e->getMessage());
-            return false;
+            $this->publishWithLogging(self::TOPIC_PREFIX . '/admin/dashboard', $message);
         }
+
+        return $success;
     }
 
     public function publishNewOrder(string $orderCode, string $customerName, array $items, float $totalAmount, int $userId = 0): bool
@@ -160,14 +170,15 @@ class MqttService
             'timestamp'      => date('Y-m-d H:i:s')
         ]);
 
-        try {
-            $this->client->publish(self::TOPIC_PREFIX . '/kitchen/orders', $message, 1);
+        $topic = self::TOPIC_PREFIX . '/kitchen/orders';
+        $success = $this->publishWithLogging($topic, $message);
+
+        if ($success) {
             $this->client->publish(self::TOPIC_PREFIX . '/system/orders', $message, 1);
-            return true;
-        } catch (\Exception $e) {
-            error_log('MQTT Publish New Order Error: ' . $e->getMessage());
-            return false;
+            $this->publishWithLogging(self::TOPIC_PREFIX . '/system/orders', $message);
         }
+
+        return $success;
     }
 
     public function publishStatusChange(string $orderCode, string $oldStatus, string $newStatus, string $customerName, int $userId = 0): bool
@@ -184,18 +195,23 @@ class MqttService
             'timestamp'      => date('Y-m-d H:i:s')
         ]);
 
-        try {
-            $this->client->publish(self::TOPIC_PREFIX . '/system/orders', $message, 1);
+        $topic = self::TOPIC_PREFIX . '/system/orders';
+        $success = $this->publishWithLogging($topic, $message);
+
+        if ($success) {
             $this->client->publish(self::TOPIC_PREFIX . '/orders/' . $orderCode, $message, 1);
+            $this->publishWithLogging(self::TOPIC_PREFIX . '/orders/' . $orderCode, $message);
+
             if ($userId > 0) {
                 $this->client->publish(self::TOPIC_PREFIX . '/customer/' . $userId . '/orders', $message, 1);
+                $this->publishWithLogging(self::TOPIC_PREFIX . '/customer/' . $userId . '/orders', $message);
             }
+
             $this->client->publish(self::TOPIC_PREFIX . '/kitchen/orders', $message, 1);
-            return true;
-        } catch (\Exception $e) {
-            error_log('MQTT Publish Status Change Error: ' . $e->getMessage());
-            return false;
+            $this->publishWithLogging(self::TOPIC_PREFIX . '/kitchen/orders', $message);
         }
+
+        return $success;
     }
 
     public function publishAdminEvent(string $event, array $data = []): bool
@@ -207,13 +223,8 @@ class MqttService
             'timestamp'  => date('Y-m-d H:i:s')
         ], $data));
 
-        try {
-            $this->client->publish(self::TOPIC_PREFIX . '/admin/events', $message, 1);
-            return true;
-        } catch (\Exception $e) {
-            error_log('MQTT Publish Admin Event Error: ' . $e->getMessage());
-            return false;
-        }
+        $topic = self::TOPIC_PREFIX . '/admin/events';
+        return $this->publishWithLogging($topic, $message);
     }
 
     // ==================== SUBSCRIBE METHODS ====================
@@ -225,6 +236,9 @@ class MqttService
         try {
             $this->client->subscribe($topic, function ($topic, $message) use ($callback) {
                 $data = json_decode($message, true);
+                // Log incoming message
+                $this->logMessage($topic, $data, true);
+                // Call user's callback
                 $callback($topic, $data);
             }, $qos);
             $this->subscriptions[$topic] = $callback;
@@ -297,6 +311,75 @@ class MqttService
             'connected' => $this->connected,
             'topics'    => $this->getSubscriptions()
         ];
+    }
+
+    // ==================== PRIVATE METHODS ====================
+
+    private function publishWithLogging(string $topic, string $message): bool
+    {
+        try {
+            $this->client->publish($topic, $message, 1);
+            $this->logMessage($topic, $message, false);
+            return true;
+        } catch (\Exception $e) {
+            error_log('MQTT Publish Error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    private function logMessage(string $topic, $message, bool $isIncoming): void
+    {
+        global $conn;
+
+        if (!$conn) {
+            error_log('MQTT Log Error: Database connection not available');
+            return;
+        }
+
+        // Ensure table exists (static flag prevents multiple checks)
+        if (self::$tableChecked === false) {
+            $this->ensureHistoryTableExists();
+        }
+
+        $topicEscaped = $conn->real_escape_string($topic);
+        $messageEscaped = $conn->real_escape_string(is_array($message) ? json_encode($message) : $message);
+        $isIncomingInt = $isIncoming ? 1 : 0;
+
+        $sql = "INSERT INTO mqtt_history (topic, message, is_incoming, timestamp) 
+                VALUES ('$topicEscaped', '$messageEscaped', $isIncomingInt, NOW())";
+
+        if (!$conn->query($sql)) {
+            error_log('MQTT Log Error: ' . $conn->error);
+        }
+    }
+
+    private function ensureHistoryTableExists(): void
+    {
+        if (self::$tableChecked) {
+            return;
+        }
+
+        global $conn;
+
+        if (!$conn) {
+            error_log('MQTT History Table Creation Error: Database connection not available');
+            return;
+        }
+
+        $sql = "CREATE TABLE IF NOT EXISTS mqtt_history (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            topic VARCHAR(255) NOT NULL,
+            message TEXT NOT NULL,
+            is_incoming TINYINT(1) DEFAULT 0,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_timestamp (timestamp)
+        )";
+
+        if ($conn->query($sql) === false) {
+            error_log('MQTT History Table Creation Error: ' . $conn->error);
+        }
+
+        self::$tableChecked = true;
     }
 }
 
