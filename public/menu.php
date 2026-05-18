@@ -184,7 +184,11 @@ function getOrderCounts($conn): array
             <div class="header-title">  
                 <h2>Foodpulse Menu</h2>
             </div>
-            <a href="customer/index.php" class="back-btn">Back</a>
+        
+            <div class="menu-buttons">
+                <button type="submit" class="btn-menu" id="placeOrderBtn" <?= empty($foodItems) ? 'disabled' : '' ?>>Place Order</button>
+                <a href="customer/index.php" class="back-btn">Back</a>
+            </div>
         </div>
         
         <form method="POST" action="menu.php" id="menuForm">

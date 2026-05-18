@@ -182,12 +182,13 @@
 
 
 .btn-menu{
-    padding: 10px 15px;
+    padding: 15px 15px;
     border-radius: 6px;
     border: none;
     background: blue;
     color: white;
     cursor: pointer;
+    margin-right: 10px;
 }
 
 .menu-cards input {
