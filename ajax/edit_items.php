@@ -97,6 +97,7 @@ if (!$duplicate_stmt) {
     ]);
     exit;
 }
+
 $duplicate_stmt->bind_param('si', $item_name, $item_id);
 if (!$duplicate_stmt->execute()) {
     $dupError = $duplicate_stmt->error;
