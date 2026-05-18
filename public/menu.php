@@ -200,13 +200,8 @@ function getOrderCounts($conn): array
                             <div class="menu-img">
                                 <img src="<?= htmlspecialchars($imgSrc, ENT_QUOTES, 'UTF-8') ?>" alt="" class="image-url">
                             </div>
-
+  
                             <div class="menu-card-body">
-                                <strong class="menu-title"><?= htmlspecialchars($item['item_name']) ?></strong><br>
-                                <small><?= htmlspecialchars($item['category']) ?></small><br>
-                                <strong>&#8369;<?= number_format($item['price'], 2) ?></strong><br>
-                                Quantity:
-                                <input type="number" name="qty_<?= (int) $item['id'] ?>" value="0" min="0" style="width: 50px;">
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -281,7 +276,9 @@ function getOrderCounts($conn): array
                                 <img src="${escapeHtml(imgSrc)}" alt="" class="image-url">
                             </div>
                             <div class="menu-card-body">
-                                <strong class="menu-title">${escapeHtml(item.item_name)}</strong><br>
+                                <div class="menu-title-header">
+                                    <span>Title</span>
+                                    <strong class="menu-title">${escapeHtml(item.item_name)}</strong><br></div>
                                 <small>${escapeHtml(item.category)}</small><br>
                                 <strong>&#8369;${Number(item.price).toFixed(2)}</strong><br>
                                 Quantity:

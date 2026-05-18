@@ -4,6 +4,18 @@
   align-items: center;
 }
 
+@media (max-width: 1200px) {
+  .menu-cards-container {
+    grid-template-columns: 1fr;
+  }
+
+  .menu-cards {
+    flex: 0 0 calc(100% - 24px);
+    width: calc(100% - 40px);
+    padding: 20px;
+  }
+}
+
 @media (max-width: 768px) {
   .hamburger-icon {
     display: block;
@@ -118,6 +130,16 @@
   .kitchen-header{
     width: 100%;
   }
+
+  .menu-cards-container {
+    grid-template-columns: 1fr;
+  }
+
+  .menu-cards {
+    flex: 0 0 calc(100% - 24px);
+    width: calc(100% - 24px);
+    padding: 20px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -150,7 +172,6 @@
   .kitchen-container {
     padding: 12px;
   }
-
 
   .kitchen-header {
     display: flex;

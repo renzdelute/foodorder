@@ -1101,6 +1101,18 @@ td {
     box-shadow: 0px 5px 12px black;
 }
 
+.menu-title-header {
+    display: flex;
+    flex-direction: column;
+}
+
+.menu-title-header span {
+    font-weight: var(--bold-font-weight);
+}
+
+
+
+
 
 
 
