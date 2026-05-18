@@ -1,6 +1,8 @@
 :root {
     --color: red;
     --bold-font-weight: bold;
+    --main-text-color: black;
+    --primary-color: blue;
 }
 
 .track-page {
@@ -1109,6 +1111,8 @@ td {
 .menu-title-header span {
     font-weight: var(--bold-font-weight);
 }
+
+
 
 
 

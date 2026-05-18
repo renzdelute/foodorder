@@ -66,6 +66,7 @@ if (!empty($error)) {
 
 $check_sql = "SELECT id, item_name FROM food_items WHERE item_name = ? LIMIT 1";
 $check_stmt = $conn->prepare($check_sql);
+
 if (!$check_stmt) {
     echo json_encode([
         'success' => false,

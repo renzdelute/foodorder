@@ -3,6 +3,9 @@
     --font-size: 12px;
     --spacing: 16px;
     --font-weight: bold;
+    --main-text-color: black;
+    --primary-color: blue;
+    --red-bg-color: red;
 }
 
 .auth-wrapper {
@@ -179,13 +182,11 @@
     font-weight: bold;
 }
 
-
-
 .btn-menu{
     padding: 15px 15px;
     border-radius: 6px;
     border: none;
-    background: blue;
+    background: var(--primary-color);
     color: white;
     cursor: pointer;
     margin-right: 10px;
