@@ -6,6 +6,7 @@
     --main-text-color: black;
     --primary-color: blue;
     --red-bg-color: red;
+    --cursor: pointer;
 }
 
 .auth-wrapper {
@@ -91,7 +92,7 @@
     border-radius: 10px;
     font-size: 16px;
     font-weight: 600;
-    cursor: pointer;
+    cursor: var(--cursor);
     transition: all 0.3s ease;
     margin-top: 8px;
 }
@@ -158,7 +159,7 @@
     color: white;
     background-color: red;
     border: none;
-    cursor: pointer;
+    cursor: var(--cursor);
 }
 
 .btn-edit {
@@ -188,7 +189,7 @@
     border: none;
     background: var(--primary-color);
     color: white;
-    cursor: pointer;
+    cursor: var(--cursor);
     margin-right: 10px;
 }
 
@@ -200,7 +201,7 @@
     text-align: center;
 }
 
-.menu-button a{
+.menu-button a {
     color: #fff;
     font-weight: bold;
 }
@@ -285,6 +286,8 @@
 .header-title h2 {
     color: white;
 }
+
+
 
 
 
