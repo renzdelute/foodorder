@@ -26,6 +26,11 @@
     z-index: 1000;
 }
 
+.navbar.active {
+    opacity: 0;
+    visibility: hidden;
+}
+
 .nav-container{
     display: flex;
     justify-content: space-between;
@@ -883,8 +888,7 @@ td {
 
 .addItem{
     margin-left: 300px;
-    padding: 120px 30px 30px;
-    min-height: 100vh;
+    padding: 30px 30px;
     background: #f8fafc;
 }
 
@@ -1139,6 +1143,7 @@ td {
 .closeBtn {
     position: absolute;
     top: 20px;
+    left: 20px;
 }
 
 

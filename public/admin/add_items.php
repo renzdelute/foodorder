@@ -237,8 +237,8 @@ $foodItems = getAll($conn, "SELECT * FROM food_items ORDER by category, item_nam
 
             <div class="fullscreen" id="fullscreen">
                 <span id="closeBtn">&times;</span>
-
-                <img src="<?= e($foodItem['image_url'] ?? '') ?>" id="fullscreenImg">
+            
+                <img src="" alt="Item image" id="fullscreenImg">
             </div>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

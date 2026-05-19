@@ -3,7 +3,7 @@ require_once '../../includes/helpers.php';
 
 ?>
 
-<nav class="navbar">
+<nav class="navbar" id="navbar">
     <div class="nav-container">
     
         <div class="header-text"> 
