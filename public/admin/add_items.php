@@ -200,7 +200,7 @@ $foodItems = getAll($conn, "SELECT * FROM food_items ORDER by category, item_nam
                                     <td><?= e($foodItem['item_code']); ?></td>
                                     <td><?= e($foodItem['item_name']); ?></td>
                                     <td>
-                                        <img src="<?= e($foodItem['image_url'] ?? '') ?>" width="100" alt="Item image" class="imgUrl" id="imagePreview">
+                                        <img src="<?= e($foodItem['image_url'] ?? '') ?>" width="100" alt="Item image" class="imgUrl">
                                     </td>
                                     <td>&#8369;<?= number_format($foodItem['price'], 2); ?></td>
                                     <td><?= e($foodItem['category']); ?></td>
@@ -238,7 +238,7 @@ $foodItems = getAll($conn, "SELECT * FROM food_items ORDER by category, item_nam
             <div class="fullscreen" id="fullscreen">
                 <span id="closeBtn">&times;</span>
 
-                <img id="fullscreenImg">
+                <img src="<?= e($foodItem['image_url'] ?? '') ?>" id="fullscreenImg">
             </div>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

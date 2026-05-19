@@ -3,10 +3,18 @@ const fullscreen = document.getElementById('fullscreen');
 const fullscreenImg = document.getElementById('fullscreenImg');
 const closeBtn = document.getElementById('closeBtn');
 
-imagePreview.addEventListener('click', () => {
-    fullscreen.classList.add('active');
+document.querySelectorAll('.imgUrl').forEach(img => {
+    img.addEventListener('click', () => {
+        fullscreen.classList.add('active');
 
-    fullscreenImg = imagePreview.src;
+        fullscreenImg = img.src;
+    });
 });
 
+closeBtn.addEventListener('click', () => {
+    fullscreen.classList.remove('active');
+});
 
+fullscreen.addEventListener('click', () => {
+    fullscreen.classList.remove('active');
+});

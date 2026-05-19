@@ -1113,6 +1113,34 @@ td {
     font-weight: var(--bold-font-weight);
 }
 
+.fullscreen {
+    position: fixed;
+    inset: 0;
+    opacity: 0;
+    visibility: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0,0,0,.95);
+    transition: 0.3s;
+}
+
+.fullscreen.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.fullscreen img {
+    height: 400px;
+    width: 400px;
+    border-radius: 10px;
+}
+
+.closeBtn {
+    position: absolute;
+    top: 20px;
+}
+
 
 
 
