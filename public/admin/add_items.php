@@ -200,7 +200,7 @@ $foodItems = getAll($conn, "SELECT * FROM food_items ORDER by category, item_nam
                                     <td><?= e($foodItem['item_code']); ?></td>
                                     <td><?= e($foodItem['item_name']); ?></td>
                                     <td>
-                                        <img src="<?= e($foodItem['image_url'] ?? '') ?>" width="100" alt="Item image" class="imgUrl">
+                                        <img src="<?= e($foodItem['image_url'] ?? '') ?>" width="100" alt="Item image" class="imgUrl" id="imagePreview">
                                     </td>
                                     <td>&#8369;<?= number_format($foodItem['price'], 2); ?></td>
                                     <td><?= e($foodItem['category']); ?></td>
@@ -234,9 +234,16 @@ $foodItems = getAll($conn, "SELECT * FROM food_items ORDER by category, item_nam
                     </table>
                 </div>
             </div>
+
+            <div class="fullscreen" id="fullscreen">
+                <span id="closeBtn">&times;</span>
+
+                <img id="fullscreenImg">
+            </div>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="../../assets/js/ajax.js"></script>
+    <script src="../../assets/js/image.js"></script>
     <script src="../../assets/js/app.js"></script>
     <script>
         document.getElementById('imageInput').addEventListener('change', previewImage);
