@@ -250,7 +250,7 @@ $foodItems = getAll($conn, "SELECT * FROM food_items ORDER by category, item_nam
 
         function previewImage(event){
             const file = event.target.files[0];
-
+                                            
             const preview = document.getElementById('image-preview');
             const uploadText = document.getElementById('uploadText');
 

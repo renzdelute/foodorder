@@ -1127,6 +1127,7 @@ td {
     align-items: center;
     background-color: rgba(0,0,0,.95);
     transition: 0.3s;
+    z-index: 2000;
 }
 
 .fullscreen.active {
@@ -1140,11 +1141,27 @@ td {
     border-radius: 10px;
 }
 
-.closeBtn {
+#closeBtn {
     position: absolute;
     top: 20px;
-    left: 20px;
+    right: 50px;
+    color: #fff;
+    font-size: 40px;
+    font-weight: 800;
+    cursor: pointer;
+    line-height: 1;
+    z-index: 2001;
 }
+
+
+
+
+
+
+
+
+
+
 
 
 
