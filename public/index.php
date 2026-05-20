@@ -268,7 +268,6 @@ if ($search) {
                             <th>Order Code</th>
                             <th>Customer</th>
                             <th>Items</th>
-                            <th>Total</th>
                             <th>Status</th>
                             <th>Time</th>
                         </tr>
@@ -290,7 +289,6 @@ if ($search) {
                             <td class="items-cell" title="<?= htmlspecialchars($order['items'] ?? 'No items'); ?>">
                                 <?= htmlspecialchars($order['items'] ?? 'No items'); ?>
                             </td>
-                            <td class="amount-cell">₱<?= number_format($order['total_amount'], 2); ?></td>
                             <td>
                                 <span class="status-badge <?= $statusClass; ?>">
                                     <?= htmlspecialchars($order['status']); ?>
@@ -352,7 +350,6 @@ if ($search) {
                             <td><span class="order-code-cell">${AJAX.formatText(order.order_code)}</span></td>
                             <td>${AJAX.formatText(order.customer_name)}</td>
                             <td class="items-cell" title="${AJAX.formatText(items)}" style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${AJAX.formatText(items)}</td>
-                            <td class="amount-cell">₱${parseFloat(order.total_amount).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}</td>
                             <td>
                                 <span class="status-badge ${statusClass}">${order.status}</span>
                             </td>

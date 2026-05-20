@@ -1126,7 +1126,7 @@ td {
     justify-content: center;
     align-items: center;
     background-color: rgba(0,0,0,.95);
-    transition: 0.3s;
+    transition: 0.5s;
     z-index: 2000;
 }
 
@@ -1152,6 +1152,10 @@ td {
     line-height: 1;
     z-index: 2001;
 }
+
+
+
+
 
 
 

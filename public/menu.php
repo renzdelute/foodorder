@@ -180,42 +180,40 @@ function getOrderCounts($conn): array
 </head>
 <body>
     <div style="padding: 30px;">
-        <div class="menu-header">
-            <div class="header-title">  
-                <h2>Foodpulse Menu</h2>
-            </div>
-        
-            <div class="menu-buttons">
-                <button type="submit" class="btn-menu" id="placeOrderBtn" <?= empty($foodItems) ? 'disabled' : '' ?>>Place Order</button>
-                <a href="customer/index.php" class="back-btn">Back</a>
-            </div>
-        </div>
-        
         <form method="POST" action="menu.php" id="menuForm">
-            <div
-                id="menu-container"
-                class="menu-cards-container"
-                data-menu-signature="<?= htmlspecialchars($menuSignature, ENT_QUOTES, 'UTF-8') ?>"
-            >
-                <?php if (!empty($foodItems)): ?>
-                    <?php foreach ($foodItems as $item): ?>
-                        <?php $imgSrc = !empty($item['image_url']) ? $item['image_url'] : '../assets/images/food.jpg'; ?>
-                        <div class="menu-cards">
-                            <div class="menu-img">
-                                <img src="<?= htmlspecialchars($imgSrc, ENT_QUOTES, 'UTF-8') ?>" alt="" class="image-url">
-                            </div>
-  
-                            <div class="menu-card-body">
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <p id="no-items-msg">No menu items available at the moment.</p>
-                <?php endif; ?>
+            <div class="menu-header">
+                <div class="header-title">  
+                    <h2>Foodpulse Menu</h2>
+                </div>
+        
+                <div class="menu-buttons">
+                    <button type="submit" class="btn-menu" id="placeOrderBtn" <?= empty($foodItems) ? 'disabled' : '' ?>>Place Order</button>
+                    <a href="customer/index.php" class="back-btn">Back</a>
+                </div>
             </div>
+                <div
+                    id="menu-container"
+                    class="menu-cards-container"
+                    data-menu-signature="<?= htmlspecialchars($menuSignature, ENT_QUOTES, 'UTF-8') ?>"
+                >
+                    <?php if (!empty($foodItems)): ?>
+                        <?php foreach ($foodItems as $item): ?>
+                            <?php $imgSrc = !empty($item['image_url']) ? $item['image_url'] : '../assets/images/food.jpg'; ?>
+                            <div class="menu-cards">
+                                <div class="menu-img">
+                                    <img src="<?= htmlspecialchars($imgSrc, ENT_QUOTES, 'UTF-8') ?>" alt="" class="image-url">
+                                </div>
 
-            <button type="submit" class="btn-menu" id="placeOrderBtn" <?= empty($foodItems) ? 'disabled' : '' ?>>Place Order</button>
-            <?php include '../template/alerts.php'; ?>
+                                <div class="menu-card-body">
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <p id="no-items-msg">No menu items available at the moment.</p>
+                    <?php endif; ?>
+                </div>
+
+                <?php include '../template/alerts.php'; ?>
         </form>
     </div>
 
