@@ -341,7 +341,6 @@ if ($search) {
                     'completed': 'status-completed'
                 };
 
-
                 tbody.innerHTML = orders.map(order => {
                     const statusClass = statusClasses[order.status] || 'status-pending';
                     const items = order.items || 'No items';

@@ -26,6 +26,7 @@ require_once '../../includes/helpers.php';
         <ul class="sidebar-menu">
             <li><a href="../admin/dashboard.php">Dashboard</a></li>
             <li><a href="../admin/add_items.php">Add Items</a></li>
+            <li><a href="../admin/add_items.php">User Management</a></li>
             
             <li class="logout-item">
             <form action="../../includes/logout.php" method="post">
