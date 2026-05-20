@@ -10,8 +10,6 @@
             </button>
         
             <ul class="nav-links" id="dropdownMenu">
-                <li><a href="index.php">Home</a></li>
-                <li><a href="menu.php">Order</a></li>
                 <li><a href="login.php">Login</a></li>
             </ul>
         </div>
